@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-item { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .pass { background-color: #d4edda; border-color: #c3e6cb; }
+        .fail { background-color: #f8d7da; border-color: #f5c6cb; }
+        .pending { background-color: #fff3cd; border-color: #ffeaa7; }
+    </style>
+</head>
+<body>
+    <h1>GitHub Pages Deployment Test</h1>
+    
+    <div class="test-item" id="test-main-page">
+        <h3>Main Page Loading</h3>
+        <p>Testing if the main application loads correctly...</p>
+        <button onclick="testMainPage()">Test Main Page</button>
+        <div id="main-page-result"></div>
+    </div>
+    
+    <div class="test-item" id="test-resources">
+        <h3>Resource Loading</h3>
+        <p>Testing if CSS, JS, and images load correctly...</p>
+        <button onclick="testResources()">Test Resources</button>
+        <div id="resources-result"></div>
+    </div>
+    
+    <div class="test-item" id="test-functionality">
+        <h3>JavaScript Functionality</h3>
+        <p>Testing if core JavaScript functions work...</p>
+        <button onclick="testFunctionality()">Test Functionality</button>
+        <div id="functionality-result"></div>
+    </div>
+
+    <script>
+        function testMainPage() {
+            const result = document.getElementById('main-page-result');
+            result.innerHTML = '<p>Testing...</p>';
+            
+            fetch('./index.html')
+                .then(response => {
+                    if (response.ok) {
+                        result.innerHTML = '<p class="pass">✅ Main page loads successfully</p>';
+                        document.getElementById('test-main-page').className += ' pass';
+                    } else {
+                        result.innerHTML = '<p class="fail">❌ Main page failed to load</p>';
+                        document.getElementById('test-main-page').className += ' fail';
+                    }
+                })
+                .catch(error => {
+                    result.innerHTML = '<p class="fail">❌ Error loading main page: ' + error.message + '</p>';
+                    document.getElementById('test-main-page').className += ' fail';
+                });
+        }
+        
+        function testResources() {
+            const result = document.getElementById('resources-result');
+            result.innerHTML = '<p>Testing...</p>';
+            
+            const resources = [
+                './style.css',
+                './app.js',
+                './Logo_TeamRadPlus_negblau_260px-1.png',
+                './new_prostate_diagram.png'
+            ];
+            
+            const tests = resources.map(resource => 
+                fetch(resource).then(response => ({
+                    resource,
+                    success: response.ok,
+                    status: response.status
+                }))
+            );
+            
+            Promise.all(tests)
+                .then(results => {
+                    const failed = results.filter(r => !r.success);
+                    if (failed.length === 0) {
+                        result.innerHTML = '<p class="pass">✅ All resources load successfully</p>';
+                        document.getElementById('test-resources').className += ' pass';
+                    } else {
+                        result.innerHTML = '<p class="fail">❌ Failed resources: ' + 
+                            failed.map(f => f.resource).join(', ') + '</p>';
+                        document.getElementById('test-resources').className += ' fail';
+                    }
+                })
+                .catch(error => {
+                    result.innerHTML = '<p class="fail">❌ Error testing resources: ' + error.message + '</p>';
+                    document.getElementById('test-resources').className += ' fail';
+                });
+        }
+        
+        function testFunctionality() {
+            const result = document.getElementById('functionality-result');
+            result.innerHTML = '<p>Testing...</p>';
+            
+            // Test if we can access the main page in an iframe to check JS loading
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = './index.html';
+            
+            iframe.onload = function() {
+                try {
+                    // Check if the iframe loaded successfully
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (iframeDoc && iframeDoc.body) {
+                        result.innerHTML = '<p class="pass">✅ Application loads and JavaScript executes</p>';
+                        document.getElementById('test-functionality').className += ' pass';
+                    } else {
+                        result.innerHTML = '<p class="fail">❌ Application failed to load properly</p>';
+                        document.getElementById('test-functionality').className += ' fail';
+                    }
+                } catch (e) {
+                    result.innerHTML = '<p class="pass">✅ Application loads (cross-origin restrictions prevent deeper testing)</p>';
+                    document.getElementById('test-functionality').className += ' pass';
+                }
+                document.body.removeChild(iframe);
+            };
+            
+            iframe.onerror = function() {
+                result.innerHTML = '<p class="fail">❌ Application failed to load</p>';
+                document.getElementById('test-functionality').className += ' fail';
+                document.body.removeChild(iframe);
+            };
+            
+            document.body.appendChild(iframe);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRI Prostata Befund Generator</title>
+    <link rel="stylesheet" href="style.css?v=20">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header__content">
+                <div class="header__title">
+                    <h1>MRI Prostata Befund Generator</h1>
+                    <p class="header__subtitle">Strukturierte Befunderstellung nach PI-RADSv2.1</p>
+                </div>
+                <div class="header__logo">
+                    <img src="Logo_TeamRadPlus_negblau_260px-1.png" alt="Team Radiologie PLUS Logo" class="logo-image" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="generator-section">
+                <!-- Klinisches Setting -->
+                <section class="klinisches-setting-section card">
+                    <div class="card__header">
+                        <h3>Klinisches Setting</h3>
+                    </div>
+                    <div class="card__body">
+                        <div class="form-group">
+                            <label class="form-label">Klinisches Setting:</label>
+                            <select id="klinischesSetting" class="form-control">
+                                <option value="Primärdiagnostik">Primärdiagnostik</option>
+                                <option value="Active Surveillance">Active Surveillance</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Voruntersuchungen -->
+                <section class="voruntersuchungen-section card">
+                    <div class="card__header">
+                        <h3>Voruntersuchungen</h3>
+                    </div>
+                    <div class="card__body">
+                        <div class="form-group">
+                            <label class="form-label">Voruntersuchungen:</label>
+                            <input type="text" id="voruntersuchungen" class="form-control" placeholder="Datum eingeben (z.B. 15.06.2025) oder 'keine' lassen" value="keine">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Kompakte Messungen -->
+                <section class="compact-section card">
+                    <div class="card__header">
+                        <h3>Messungen & Obligatorische Scores</h3>
+                    </div>
+                    <div class="card__body">
+                        <div class="compact-grid">
+                            <!-- Prostatavolumen -->
+                            <div class="measurement-group">
+                                <h4>Prostatavolumen (cm)</h4>
+                                <div class="measurement-row">
+                                    <div class="measurement-item">
+                                        <label class="dimension-label">ap</label>
+                                        <input type="text" id="measureA" class="form-control compact-input" placeholder="a" pattern="[0-9]+([,][0-9]+)?" inputmode="decimal">
+                                    </div>
+                                    <span class="multiply">×</span>
+                                    <div class="measurement-item">
+                                        <label class="dimension-label">axial</label>
+                                        <input type="text" id="measureB" class="form-control compact-input" placeholder="b" pattern="[0-9]+([,][0-9]+)?" inputmode="decimal">
+                                    </div>
+                                    <span class="multiply">×</span>
+                                    <div class="measurement-item">
+                                        <label class="dimension-label">cc</label>
+                                        <input type="text" id="measureC" class="form-control compact-input" placeholder="c" pattern="[0-9]+([,][0-9]+)?" inputmode="decimal">
+                                    </div>
+                                    <span class="multiply">× 0,52 =</span>
+                                    <div id="calculatedVolume" class="result-display">—</div>
+                                </div>
+                            </div>
+
+                            <!-- PSA Dichte -->
+                            <div class="measurement-group">
+                                <h4>PSA Dichte</h4>
+                                <div class="measurement-row">
+                                    <input type="text" id="psaValue" class="form-control compact-input" placeholder="PSA" pattern="[0-9]+([,][0-9]+)?" inputmode="decimal">
+                                    <span class="multiply">÷</span>
+                                    <div id="calculatedPsaDensity" class="result-display">—</div>
+                                </div>
+                            </div>
+
+                            <!-- Parameter -->
+                            <div class="measurement-group">
+                                <h4>Obligatorische Scores</h4>
+                                <div class="parameter-row">
+                                    <select id="piQual" class="form-control compact-select">
+                                        <option value="">PI-QUAL v2</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                    </select>
+                                    <select id="epeGrade" class="form-control compact-select">
+                                        <option value="">EPE Grade</option>
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Fokale Läsionen -->
+                <section class="lesion-section card">
+                    <div class="card__header flex justify-between items-center">
+                        <h3>Fokale Läsionen</h3>
+                        <button id="addLesionBtn" class="btn btn--secondary btn--sm">
+                            ➕ Läsion hinzufügen
+                        </button>
+                    </div>
+                    <div class="card__body">
+                        <div id="lesionsContainer">
+                            <div class="no-lesions-message">Keine Läsionen hinzugefügt</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Andere Befundabschnitte -->
+                <section class="findings-section card">
+                    <div class="card__header">
+                        <h3>Andere Befundabschnitte</h3>
+                    </div>
+                    <div class="card__body">
+                        <div class="findings-grid">
+                            <div class="form-group">
+                                <label class="form-label">Neurovaskuläres Bündel:</label>
+                                <textarea id="neuroBundle" class="form-control findings-textarea" rows="2">Keine Invasion des neurovaskulären Bündels.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Samenblasen:</label>
+                                <textarea id="seminalVesicles" class="form-control findings-textarea" rows="2">Keine Invasion der Samenblase beidseits.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Peritoneum:</label>
+                                <textarea id="peritoneum" class="form-control findings-textarea" rows="2">Keine freie Flüssigkeit.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lymphknoten:</label>
+                                <textarea id="lymphNodes" class="form-control findings-textarea" rows="2">Keine pathologisch vergrösserten Lymphknoten in den miterfassten Abschnitten.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Skelett / Weichteile:</label>
+                                <textarea id="skeleton" class="form-control findings-textarea" rows="2">Heterogenes Knochenmarksignal ohne Nachweis suspekter Läsionen. Unauffälliger Weichteilmantel.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nebenbefunde:</label>
+                                <textarea id="incidentalFindings" class="form-control findings-textarea" rows="2">Keine.</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Beurteilung -->
+                <section class="assessment-section card">
+                    <div class="card__header">
+                        <h3>Beurteilung</h3>
+                    </div>
+                    <div class="card__body">
+                        <div class="form-group">
+                            <label class="form-label">Beurteilung:</label>
+                            <textarea id="assessment" class="form-control assessment-textarea" rows="6" placeholder="Ihre Beurteilung hier eingeben…"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Generator Controls -->
+                <section class="generator-controls card">
+                    <div class="card__header">
+                        <h3>Generator</h3>
+                    </div>
+                    <div class="card__body">
+                        <div class="generator-actions">
+                            <div class="generator-actions__primary">
+                                <button id="generateBtn" class="btn btn--primary btn--lg">
+                                    📋 Befund generieren
+                                </button>
+                            </div>
+                            <div class="generator-actions__secondary">
+                                <button id="copyHtmlBtn" class="btn btn--secondary hidden">
+                                    📄 HTML kopieren
+                                </button>
+                                <button id="copyPlainBtn" class="btn btn--secondary hidden">
+                                    📝 Text kopieren
+                                </button>
+                                <button onclick="resetApplication()" class="btn btn--danger">
+                                    🔄 Zurücksetzen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Befund Output -->
+                <section class="output-section card">
+                    <div class="card__header">
+                        <h3>Generierter Befund</h3>
+                    </div>
+                    <div class="card__body">
+                        <div id="befundOutput" class="befund-output">
+                            <div class="placeholder-text">Hier wird der formatierte Befund angezeigt …</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PI-RADS Painter -->
+                <section class="pirads-painter-section card">
+                    <div class="card__header">
+                        <h3>PI-RADS Läsions-Painter</h3>
+                        <p class="card__subtitle">Interaktives Tool zur Markierung von Prostata-Läsionen</p>
+                    </div>
+                    <div class="card__body">
+                        <div class="painter-controls">
+                            <div class="control-group">
+                                <label class="form-label">
+                                    🏷️ Läsionsnummer:
+                                    <input type="number" id="lesionNumber" class="form-control painter-input" min="1" value="1">
+                                </label>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label class="form-label">
+                                    🎨 Farbe:
+                                    <select id="lesionColor" class="form-control painter-select">
+                                        <option value="#51abe4">Blau</option>
+                                        <option value="#DB4437">Rot</option>
+                                        <option value="#F4B400">Gelb</option>
+                                        <option value="#0F9D58">Grün</option>
+                                        <option value="#7B1FA2">Violett</option>
+                                    </select>
+                                </label>
+                            </div>
+                            
+                            <button onclick="addLesion()" class="btn btn--primary">
+                                ➕ Läsion hinzufügen
+                            </button>
+                            
+                            <button onclick="resetPainter()" class="btn btn--secondary">
+                                🔄 Painter zurücksetzen
+                            </button>
+                        </div>
+
+                        <div class="painter-tools">
+                            <button class="tool-btn active" id="penTool" onclick="setTool('pen')">
+                                ✏️ Stift
+                            </button>
+                            <button class="tool-btn" id="eraserTool" onclick="setTool('eraser')">
+                                🧹 Radierer
+                            </button>
+                        </div>
+
+                        <div class="painter-instructions">
+                            <p class="instruction-text">
+                                💡 <strong>Um das PI-RADS Bild zu kopieren:</strong> Rechtsklick auf das Bild → "Bild kopieren" → 
+                                Dann im "Bild-Kombination"-Tool das Bild mit der "📋 Bild aus Zwischenablage einfügen" Schaltfläche einfügen.
+                            </p>
+                        </div>
+
+                        <div class="painter-container">
+                            <canvas id="prostateCanvas"></canvas>
+                        </div>
+                        <div id="virtualStylo"></div>
+                    </div>
+                </section>
+
+                <!-- Image Combiner Section -->
+                <section class="image-combiner-section card">
+                    <div class="card__header">
+                        <h3>Bild-Kombination</h3>
+                        <p class="card__subtitle">Kombiniere Screenshots mit PI-RADS Painter Ausgabe</p>
+                    </div>
+                    <div class="card__body">
+                        <div class="combiner-step">
+                            <h4>Schritt 1: Screenshot einfügen</h4>
+                            <div class="paste-areas">
+                                <div class="paste-area" id="leftPasteArea" tabindex="0">
+                                    <div class="paste-content">
+                                        <div class="paste-icon">📋</div>
+                                        <h5>Screenshot einfügen</h5>
+                                        <p>Hier klicken und Cmd+V/Strg+V drücken<br>oder Bild hierher ziehen</p>
+                                        <button class="btn btn--secondary btn--sm" id="fileSelectButton">
+                                            📁 Datei auswählen
+                                        </button>
+                                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                                        <div class="image-info" id="leftImageInfo"></div>
+                                    </div>
+                                    <canvas class="preview-canvas hidden" id="leftPreview"></canvas>
+                                </div>
+                                <button class="btn btn--primary btn--sm paste-button" onclick="pasteFromClipboard('left')">
+                                    📋 Bild aus Zwischenablage einfügen
+                                </button>
+                                
+                                <div class="paste-area" id="rightPasteArea" tabindex="0">
+                                    <div class="paste-content">
+                                        <div class="paste-icon">📋</div>
+                                        <h5>Zweites Bild einfügen</h5>
+                                        <p>Hier klicken und Cmd+V/Strg+V drücken<br>oder Bild hierher ziehen</p>
+                                        <div class="image-info" id="rightImageInfo"></div>
+                                    </div>
+                                    <canvas class="preview-canvas hidden" id="rightPreview"></canvas>
+                                </div>
+                                <button class="btn btn--primary btn--sm paste-button" onclick="pasteFromClipboard('right')">
+                                    📋 Bild aus Zwischenablage einfügen
+                                </button>
+                            </div>
+                            
+                            <div class="additional-screenshots">
+                                <button class="btn btn--secondary" id="addScreenshotButton">
+                                    ➕ Weiteren Screenshot hinzufügen
+                                </button>
+                                <p class="help-text">Füge zusätzliche Screenshots hinzu, um mehr Bilder zu kombinieren</p>
+                            </div>
+                        </div>
+
+                        <!-- Combined Preview -->
+                        <div class="combined-step hidden" id="combinedSection">
+                            <h4>Schritt 2: Vorschau und Anpassung</h4>
+                            <div class="combined-container">
+                                <div class="combined-preview-wrapper">
+                                    <canvas id="combinedCanvas" width="1430" height="1286"></canvas>
+                                    <div class="resize-handles" id="resizeHandles"></div>
+                                </div>
+                                <div class="combined-info">
+                                    <div class="usage-instructions">
+                                        <h5>Bedienung:</h5>
+                                        <ul>
+                                            <li>🖱️ <strong>Klicken & Ziehen:</strong> Bilder frei positionieren</li>
+                                            <li>📐 <strong>Resize-Handles:</strong> Bilder durch Ziehen der Ecken/Kanten skalieren</li>
+                                            <li>🔄 <strong>Seitenverhältnis:</strong> Wird automatisch bei Eck-Handles beibehalten</li>
+                                            <li>🔷 <strong>Canvas-Größe:</strong> Gesamtgröße der Leinwand über Handles ändern</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Export Section -->
+                        <div class="export-step hidden" id="exportSection">
+                            <h4>Schritt 3: Kombiniertes Bild exportieren</h4>
+                            <div class="export-controls">
+                                <button class="btn btn--primary" id="exportButton">
+                                    📋 Kombiniertes Bild kopieren
+                                </button>
+                            </div>
+                            <div class="status-message" id="statusMessage"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p class="footer__text">© 2025 Dominik Deniffel MRI Prostata Befund Generator • Alle Rechte vorbehalten</p>
+        </footer>
+    </div>
+
+    <script src="app.js?v=40"></script>
+</body>
+</html>
