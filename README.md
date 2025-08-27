@@ -96,3 +96,8 @@ For questions or support, please open an issue on GitHub.
 ---
 
 **Note**: This application is optimized for desktop browsers and medical workstation environments.
+
+
+---
+Deployment: https://github.com/Dederanos/PIRADS_reporting/actions/workflows/deploy.yml
+Live: https://dederanos.github.io/PIRADS_reporting/
